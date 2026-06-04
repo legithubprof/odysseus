@@ -280,6 +280,18 @@ async def action_consolidate_memory(owner: str, **kwargs) -> Tuple[str, bool]:
 # Registry: action name -> async function(owner, **kwargs) -> (result_str, success_bool)
 
 
+def _is_admin(user: str | None) -> bool:
+    if not user:
+        return False
+    if user == "internal-tool":
+        return True
+    try:
+        from core.auth import AuthManager
+        return AuthManager().is_admin(user)
+    except Exception:
+        return False
+
+
 async def _run_subprocess(argv, *, shell: bool = False, timeout: int = 120, label: str = "Command") -> Tuple[str, bool]:
     """Shared subprocess runner. Wraps the blocking subprocess.run in
     asyncio.to_thread so the event loop stays responsive."""
@@ -301,6 +313,8 @@ async def _run_subprocess(argv, *, shell: bool = False, timeout: int = 120, labe
 
 async def action_ssh_command(owner: str, command: str = "", host: str = "localhost", **kwargs) -> Tuple[str, bool]:
     """Run a shell command locally or on a remote host via SSH."""
+    if not _is_admin(owner):
+        return "Action requires admin privileges", False
     if not command:
         return "No command specified", False
     if host in ("localhost", "127.0.0.1", "local"):
@@ -317,6 +331,8 @@ async def action_ssh_command(owner: str, command: str = "", host: str = "localho
 
 async def action_run_script(owner: str, script: str = "", host: str = "", **kwargs) -> Tuple[str, bool]:
     """Run a script locally, or via SSH when a host is configured."""
+    if not _is_admin(owner):
+        return "Action requires admin privileges", False
     if not script:
         return "No script specified", False
     target_host = (host or os.getenv("ODYSSEUS_SCRIPT_HOST", "localhost")).strip()
@@ -329,6 +345,8 @@ async def action_run_script(owner: str, script: str = "", host: str = "", **kwar
 
 async def action_run_local(owner: str, script: str = "", **kwargs) -> Tuple[str, bool]:
     """Run a script locally (no SSH)."""
+    if not _is_admin(owner):
+        return "Action requires admin privileges", False
     if not script:
         return "No script specified", False
     if IS_WINDOWS and find_bash():
