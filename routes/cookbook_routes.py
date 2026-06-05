@@ -1984,9 +1984,9 @@ def setup_cookbook_routes() -> APIRouter:
                     if ssh_port and ssh_port != "22":
                         ssh_base.extend(["-p", str(ssh_port)])
                     shell_cmd = " ".join(shlex.quote(x) for x in cmd)
-                    proc = subprocess.run(ssh_base + [remote_host, shell_cmd], timeout=12, capture_output=True)
+                    proc = subprocess.run(ssh_base + [remote_host, shell_cmd], timeout=12, capture_output=True) # Threading handled by caller asyncio.to_thread
                 else:
-                    proc = subprocess.run(cmd, timeout=12, capture_output=True)
+                    proc = subprocess.run(cmd, timeout=12, capture_output=True) # Threading handled by caller asyncio.to_thread
                 return proc.returncode == 0
             except Exception:
                 return False
