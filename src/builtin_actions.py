@@ -284,7 +284,7 @@ def _is_admin(user: str | None) -> bool:
     if not user:
         return False
     if user == "internal-tool":
-        return True
+        return False
     try:
         from core.auth import AuthManager
         return AuthManager().is_admin(user)

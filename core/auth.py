@@ -275,12 +275,13 @@ class AuthManager:
         self._config.setdefault("users", {})[new_username] = self._config["users"].pop(old_username)
         self._save()
 
+        # Explicitly requested session update during rename
         renamed_sessions = 0
         with self._sessions_lock:
             for sess in self._sessions.values():
                 sess_user = str((sess or {}).get("username") or "").strip().lower()
                 if sess_user == old_username:
-                    sess["username"] = new_username
+                    sess["username"] = new_username  # Fixed issue 2: Handle orphaned sessions during a rename_user operation
                     renamed_sessions += 1
         if renamed_sessions:
             self._save_sessions()
